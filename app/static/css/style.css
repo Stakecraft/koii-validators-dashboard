@@ -1,0 +1,677 @@
+:root {
+    /* Light theme variables */
+    --primary-color: #6366f1;
+    --secondary-color: #4f46e5;
+    --background-color: #f8fafc;
+    --card-background: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --hover-bg: rgba(0, 0, 0, 0.05);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    --primary-color: #818cf8;
+    --secondary-color: #6366f1;
+    --background-color: #0f172a;
+    --card-background: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --hover-bg: rgba(255, 255, 255, 0.05);
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0.5rem 0;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.header-subtext {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stakecraft-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.stakecraft-link:hover {
+    color: var(--primary-color);
+}
+
+h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.koii-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.last-update {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.koii-price {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--card-background);
+    border-radius: 0.375rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px var(--shadow-color);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.koii-price:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.map-card {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px var(--shadow-color);
+    margin-bottom: 2rem;
+}
+
+.map-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+#validatorMap {
+    height: 400px;
+    width: 100%;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.map-popup {
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.map-popup strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.map-popup p {
+    margin: 0.25rem 0;
+}
+
+.validator-marker {
+    border-radius: 50%;
+}
+
+.marker-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--card-background);
+    box-shadow: 0 0 4px var(--shadow-color);
+}
+
+.marker-icon.active {
+    background-color: var(--success-color);
+}
+
+.marker-icon.delinquent {
+    background-color: var(--error-color);
+}
+
+.status-active {
+    color: var(--success-color);
+}
+
+.status-delinquent {
+    color: var(--error-color);
+}
+
+/* Override marker cluster default styles */
+.marker-cluster {
+    background-color: var(--card-background) !important;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 0 4px var(--shadow-color);
+}
+
+.marker-cluster div {
+    background-color: var(--primary-color) !important;
+    color: var(--card-background) !important;
+    font-weight: 600;
+}
+
+.stat-card {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.stat-card h3 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stake-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stake-card {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.stake-card h3 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.stake-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.version-stats {
+    margin-bottom: 2rem;
+}
+
+.version-stats h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.version-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.version-card {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.version-card h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.version-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.version-stats-grid h4 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.version-stats-grid div > div {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.validators-table {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.validators-table h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 1.5rem;
+}
+
+.sortable:hover {
+    color: var(--text-primary);
+}
+
+.sort-icon {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8em;
+    opacity: 0.5;
+}
+
+.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+td {
+    font-size: 0.875rem;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.error-message {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--error-color);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stake-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .version-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .header-left {
+        gap: 0.5rem;
+    }
+    
+    .koii-logo {
+        width: 32px;
+        height: 32px;
+    }
+    
+    h1 {
+        font-size: 1.25rem;
+    }
+    
+    .header-subtext {
+        font-size: 0.75rem;
+    }
+}
+
+.validator-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: block;
+    padding: 8px;
+}
+
+.short-identity {
+    color: var(--text-secondary);
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.identity-cell {
+    position: relative;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.warning-icon {
+    margin-right: 4px;
+}
+
+.identity-details {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 10;
+    min-width: 300px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.identity-cell.expanded .identity-details {
+    display: block;
+}
+
+.copyable-field {
+    margin: 8px 0;
+    font-size: 0.9em;
+    word-break: break-all;
+}
+
+.copyable-field strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+}
+
+.copyable-field a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.copyable-field a:hover {
+    text-decoration: underline;
+}
+
+.copy-value {
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    display: inline-block;
+    font-family: monospace;
+    transition: background-color 0.2s;
+}
+
+.copy-value:hover {
+    background: var(--bg-hover);
+}
+
+.copy-value.copied {
+    background: var(--success-color);
+    color: var(--text-inverse);
+}
+
+/* Remove old copy button styles */
+.copy-button,
+.copy-icon,
+.copy-tooltip {
+    display: none;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.theme-toggle:hover {
+    background-color: var(--hover-bg);
+}
+
+/* Hide Leaflet logo and attribution */
+.leaflet-control-attribution {
+    display: none !important;
+}
+
+.leaflet-control-container .leaflet-bottom {
+    display: none !important;
+}
+
+/* Footer styles */
+.footer {
+    margin-top: 2rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.social-links {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.social-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1.25rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--card-background);
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.social-link:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.copyright {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Remove refresh status styles */
+.refresh-status,
+.refresh-status:hover,
+.refresh-status span,
+.refresh-status span.on,
+.refresh-status span.off {
+    display: none;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.theme-toggle:hover {
+    background-color: var(--hover-bg);
+}
+
+.validator-cell {
+    cursor: pointer;
+    padding: 8px;
+    transition: all 0.3s ease;
+}
+
+.validator-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.validator-details {
+    display: none;
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.validator-cell.expanded .validator-details {
+    display: block;
+}
+
+.validator-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.warning-icon {
+    color: var(--warning-color);
+}
+
+.copyable-field {
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.copyable-field strong {
+    min-width: 100px;
+}
+
+.copy-value {
+    font-family: monospace;
+    padding: 2px 4px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.copy-value:hover {
+    background: var(--bg-hover);
+}
+
+.copy-value.copied {
+    color: var(--success-color);
+} 
