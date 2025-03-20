@@ -20,18 +20,14 @@ class Config:
     _gc_interval: int = 3600  # Run garbage collection every hour
 
     # API Endpoints
-    API_ENDPOINT = getenv('API_ENDPOINT', '/api/nodes')
-    
-    # Ensure RPC URL has proper format
-    _rpc_url = getenv('KOII_RPC_URL', 'https://rpc-koii-mainnet.stakecraft.com:5123')
-    KOII_RPC_URL = _rpc_url if _rpc_url.startswith(('http://', 'https://')) else f'https://{_rpc_url}'
-    
-    CRYPTORANK_API_URL = getenv('CRYPTORANK_API_URL', 'https://api.cryptorank.io/v2/currencies/193384')
-    CRYPTORANK_API_KEY = getenv('CRYPTORANK_API_KEY', '')
-    VALIDATORS_API_URL = getenv('VALIDATORS_API_URL', 'http://nginx:80/api/validators')
+    API_ENDPOINT = getenv('API_ENDPOINT')
+    KOII_RPC_URL = getenv('KOII_RPC_URL')
+    CRYPTORANK_API_URL = getenv('CRYPTORANK_API_URL')
+    CRYPTORANK_API_KEY = getenv('CRYPTORANK_API_KEY')
+    VALIDATORS_API_URL = getenv('VALIDATORS_API_URL')
 
     # Cache TTLs (in seconds)
-    PRICE_CACHE_TTL = int(getenv('PRICE_CACHE_TTL', 600))
+    PRICE_CACHE_TTL = int(getenv('PRICE_CACHE_TTL', '600'))
 
     # External URLs
     KOII_LOGO_URL = getenv('KOII_LOGO_URL')
@@ -47,6 +43,8 @@ class Config:
 
     # Update Interval (in milliseconds)
     REFRESH_INTERVAL = getenv('REFRESH_INTERVAL')
+
+    STADIA_MAPS_API_KEY = getenv('STADIA_MAPS_API_KEY')
 
     @classmethod
     def run_garbage_collection(cls) -> None:

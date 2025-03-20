@@ -12,6 +12,7 @@ services:
     environment:
       - FLASK_APP=app/app.py
       - FLASK_ENV=production
+      - STADIA_MAPS_API_KEY=${STADIA_MAPS_API_KEY}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]

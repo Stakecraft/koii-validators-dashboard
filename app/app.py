@@ -9,7 +9,7 @@ import time
 import logging
 from typing import Dict, List, Optional, Any
 import subprocess
-from config import Config
+from .config import Config
 
 # Load environment variables
 load_dotenv()
@@ -362,55 +362,37 @@ def get_validator_info() -> Optional[Dict[str, Any]]:
         active_validators_count = len([v for v in processed_validators if not v['delinquent']])
         if active_validators_count > 0 and total_active_stake > 0:
             # Calculate total rewards from the previous epoch
-            total_previous_epoch_rewards = 0
-            max_credits = 0  # Track maximum credits for normalization
+            total_epoch_rewards = 0
             
-            # First pass: find maximum credits from previous epoch
+            # Calculate rewards from the previous epoch
             for validator in current_validators:
                 epoch_credits = validator.get("epochCredits", [])
-                if len(epoch_credits) >= 3:  # Need at least 3 epochs
-                    previous_epoch = epoch_credits[-2]
-                    two_epochs_ago = epoch_credits[-3]
-                    credits = previous_epoch[1] - two_epochs_ago[1]  # Credits earned in previous epoch
-                    max_credits = max(max_credits, credits)
+                if len(epoch_credits) >= 2:  # Need at least 2 epochs
+                    latest = epoch_credits[-1]
+                    previous = epoch_credits[-2]
+                    epoch_rewards = latest[1] - previous[1]  # Credits earned in current epoch
+                    total_epoch_rewards += epoch_rewards
             
-            # Second pass: calculate normalized rewards from previous epoch
-            for validator in current_validators:
-                epoch_credits = validator.get("epochCredits", [])
-                if len(epoch_credits) >= 3:  # Need at least 3 epochs
-                    previous_epoch = epoch_credits[-2]
-                    two_epochs_ago = epoch_credits[-3]
-                    credits = previous_epoch[1] - two_epochs_ago[1]  # Credits earned in previous epoch
-                    
-                    # Convert credits to KOII tokens (assuming 1 credit = 1 KOII for perfect performance)
-                    # Normalize based on maximum credits to account for varying performance
-                    if max_credits > 0:
-                        normalized_credits = credits / max_credits
-                        epoch_reward = credits  # Each credit represents 1 KOII
-                        total_previous_epoch_rewards += epoch_reward
-            
-            # Calculate APR based on previous epoch rewards
-            rewards_per_epoch = total_previous_epoch_rewards
-            
-            # Project to annual rewards (Koii uses 12-hour epochs)
+            # Calculate epochs per year (Koii uses 12-hour epochs)
             epochs_per_year = (365 * 24) // 12  # 730 epochs per year
-            projected_annual_rewards = rewards_per_epoch * epochs_per_year
             
-            # Calculate APR as a percentage of total stake
+            # Calculate APR using the formula: APR = ((Epoch Rewards × Epochs per Year) / Total Stake) × 100
             # Convert total_active_stake from lamports to KOII (1 KOII = 1e9 lamports)
             total_stake_in_koii = total_active_stake / 1e9
             
-            # Calculate APR percentage
-            network_apr = (projected_annual_rewards / total_stake_in_koii) * 100
-            
-            # Round to 2 decimal places and ensure reasonable bounds
-            network_apr = round(max(min(network_apr, 12.0), 6.0), 2)
-            
-            # Log values for debugging
-            logger.info(f"APR Calculation (Previous Epoch): rewards_per_epoch={rewards_per_epoch}, "
-                       f"total_stake_in_koii={total_stake_in_koii}, "
-                       f"projected_annual_rewards={projected_annual_rewards}, "
-                       f"network_apr={network_apr}")
+            if total_stake_in_koii > 0:
+                network_apr = ((total_epoch_rewards * epochs_per_year) / total_stake_in_koii) * 100
+                
+                # Round to 2 decimal places
+                network_apr = round(network_apr, 2)
+                
+                # Log values for debugging
+                logger.info(f"APR Calculation: total_epoch_rewards={total_epoch_rewards}, "
+                           f"epochs_per_year={epochs_per_year}, "
+                           f"total_stake_in_koii={total_stake_in_koii}, "
+                           f"network_apr={network_apr}%")
+            else:
+                network_apr = 0
         else:
             network_apr = 0
         
@@ -521,6 +503,55 @@ def get_koii_price() -> Optional[float]:
         logger.error(f"Error fetching KOII price: {e}", exc_info=True)
         return price_cache or None
 
+def get_epoch_info() -> Optional[Dict[str, Any]]:
+    try:
+        # Get current epoch
+        payload = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getEpochInfo",
+            "params": []
+        }
+        response = requests.post(Config.KOII_RPC_URL, json=payload)
+        if response.status_code != 200:
+            logger.error("Failed to get epoch info: HTTP status code %d", response.status_code)
+            return None
+
+        data = response.json()
+        if "error" in data:
+            logger.error(f"Error getting epoch info: {data['error']}")
+            return None
+
+        result = data.get("result", {})
+        if not result:
+            logger.error("No result data in epoch info response")
+            return None
+
+        # Log raw epoch data
+        logger.info("Raw epoch info: %s", result)
+
+        # Calculate epoch progress
+        slot_index = result.get("slotIndex", 0)  # Current slot within the epoch
+        slots_in_epoch = result.get("slotsInEpoch", 432000)  # Total slots in epoch
+        
+        # Log progress calculation values
+        logger.info(f"Progress calculation: slot_index={slot_index}, slots_in_epoch={slots_in_epoch}")
+        
+        # Calculate progress percentage
+        progress = (slot_index / slots_in_epoch) * 100 if slots_in_epoch > 0 else 0
+        logger.info(f"Calculated progress: {progress}%")
+
+        epoch_info = {
+            "currentEpoch": result.get("epoch", 0),
+            "epochProgress": min(max(progress, 0), 100),  # Ensure between 0-100
+            "timeLeftInEpoch": max((slots_in_epoch - slot_index) * 0.4, 0)  # 0.4 seconds per slot
+        }
+        logger.info("Returning epoch info: %s", epoch_info)
+        return epoch_info
+    except Exception as e:
+        logger.error(f"Error getting epoch info: {e}", exc_info=True)
+        return None
+
 @app.route('/')
 def index():
     return render_template('index.html', config=Config.to_dict())
@@ -534,6 +565,9 @@ def get_nodes():
             
         # Add KOII price to the response
         data['koiiPrice'] = get_koii_price()
+        
+        # Add epoch information
+        data['epochInfo'] = get_epoch_info()
         
         return jsonify(data)
     except Exception as e:

@@ -28,6 +28,13 @@
                 </div>
             </div>
             <div class="header-right">
+                <div class="epoch-progress">
+                    <span class="epoch-text">Epoch: <span id="currentEpoch">-</span></span>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="epochProgress" style="width: 0%"></div>
+                    </div>
+                    <span class="epoch-text"><span id="epochTimeLeft">-</span></span>
+                </div>
                 <div class="koii-price">KOII: $<span id="koiiPrice">-</span></div>
                 <button class="theme-toggle" id="themeToggle" title="Toggle theme">
                     🌞
@@ -208,6 +215,39 @@
                 .then(data => {
                     console.log('Received data:', data);
                     
+                    // Update epoch progress if available
+                    if (data.epochInfo) {
+                        console.log('Epoch info:', data.epochInfo);
+                        const { currentEpoch, epochProgress } = data.epochInfo;
+                        
+                        // Update epoch number
+                        const epochElement = document.getElementById('currentEpoch');
+                        if (currentEpoch !== undefined) {
+                            epochElement.textContent = currentEpoch;
+                            console.log('Updated epoch number:', currentEpoch);
+                        }
+                        
+                        // Update progress bar
+                        const progressBar = document.getElementById('epochProgress');
+                        if (epochProgress !== undefined) {
+                            const progress = Math.min(Math.max(epochProgress, 0), 100); // Ensure between 0-100
+                            console.log('Setting progress bar width to:', `${progress}%`);
+                            progressBar.style.width = `${progress}%`;
+                            // Force a reflow to ensure the style is applied
+                            progressBar.offsetHeight;
+                        }
+                        
+                        // Update progress percentage
+                        const timeLeftElement = document.getElementById('epochTimeLeft');
+                        if (epochProgress !== undefined) {
+                            const progress = Math.min(Math.max(epochProgress, 0), 100);
+                            timeLeftElement.textContent = `${progress.toFixed(1)}%`;
+                            console.log('Updated progress percentage:', `${progress.toFixed(1)}%`);
+                        }
+                    } else {
+                        console.log('No epoch info in data:', data);
+                    }
+
                     // Try to fetch validator info, but don't let it break the main functionality
                     fetch('http://localhost:8080/api/validators', {
                         headers: {
@@ -215,52 +255,35 @@
                             'Content-Type': 'application/json'
                         }
                     })
-                        .then(async res => {
-                            // Log full response details
-                            console.log('Validator info response details:', {
-                                status: res.status,
-                                statusText: res.statusText,
-                                contentType: res.headers.get('content-type'),
-                                url: res.url,
-                                headers: Object.fromEntries([...res.headers.entries()])
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(validatorInfo => {
+                            // Create a map of validator info by identity pubkey
+                            const validatorMap = {};
+                            validatorInfo.forEach(validator => {
+                                if (validator.identityPubkey) {
+                                    validatorMap[validator.identityPubkey] = validator;
+                                }
                             });
                             
-                            if (!res.ok) {
-                                throw new Error(`HTTP error! status: ${res.status}, statusText: ${res.statusText}`);
-                            }
+                            // Store the validator map globally
+                            window.validatorInfoMap = validatorMap;
                             
-                            const text = await res.text();
-                            console.log('Raw validator info response:', text);
-                            
-                            try {
-                                const parsed = JSON.parse(text);
-                                console.log('Successfully parsed validator info:', parsed);
-                                // Convert the array to an object keyed by identityPubkey
-                                const validatorMap = {};
-                                parsed.forEach(validator => {
-                                    validatorMap[validator.identityPubkey] = validator;
-                                });
-                                return validatorMap;
-                            } catch (e) {
-                                console.error('JSON parse error:', e);
-                                console.error('Failed to parse validator info response. First 500 characters:', text.substring(0, 500));
-                                throw new Error(`Invalid JSON response: ${e.message}`);
+                            // Update the table with the new data
+                            if (data.validators) {
+                                updateValidatorTable(data.validators);
                             }
-                        })
-                        .then(validatorsInfo => {
-                            console.log('Processed validators info:', validatorsInfo);
-                            // Store the validator info
-                            window.validatorInfoMap = validatorsInfo;
-                            // Refresh the table to show the names
-                            updateValidatorTable(data.validators);
                         })
                         .catch(error => {
-                            console.warn('Failed to fetch validator info:', error);
-                            // Log the full error for debugging
-                            console.error('Full error details:', error);
-                            window.validatorInfoMap = {};
+                            console.error('Error fetching validator info:', error);
                             // Still update the table with default values
-                            updateValidatorTable(data.validators);
+                            if (data.validators) {
+                                updateValidatorTable(data.validators);
+                            }
                         });
                     
                     // Helper function to update element only if value changed
@@ -323,7 +346,7 @@
                                 </td>
                                 <td>${formatPercentage(validator.commission)}</td>
                                 <td>${formatStake(validator.activatedStake)}</td>
-                                <td>${formatPercentage(validator.skipRate)}</td>
+                                <td>${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</td>
                                 <td>${validator.version || '-'}</td>
                                 <td>
                                     <span class="status-badge ${validator.delinquent ? 'status-delinquent' : 'status-active'}">
@@ -528,7 +551,7 @@
                             <p><strong>Location:</strong> ${validator.location.city || ''}, ${validator.location.country || ''}</p>
                             <p><strong>Stake:</strong> ${formatStakeCompact(validator.activatedStake)}</p>
                             <p><strong>Commission:</strong> ${validator.commission}%</p>
-                            <p><strong>Skip Rate:</strong> ${validator.skipRate.toFixed(2)}%</p>
+                            <p><strong>Skip Rate:</strong> ${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</p>
                             <p><strong>Version:</strong> ${validator.version || '-'}</p>
                         </div>
                     `);
