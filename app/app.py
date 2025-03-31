@@ -54,6 +54,7 @@ DB_CONFIG = {
 
 def init_db():
     """Initialize database tables if they don't exist"""
+    conn = None
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         with conn.cursor() as cur:

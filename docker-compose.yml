@@ -4,7 +4,7 @@ services:
   web:
     build: .
     ports:
-      - "127.0.0.1:5001:5000"
+      - "5001:5000"
     volumes:
       - .:/app
     env_file:
@@ -26,8 +26,10 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      - nginx
-      - db
+      db:
+        condition: service_healthy
+      nginx:
+        condition: service_started
 
   nginx:
     build: 
