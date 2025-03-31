@@ -4,7 +4,7 @@ services:
   web:
     build: .
     ports:
-      - "5001:5000"
+      - "127.0.0.1:5001:5000"
     volumes:
       - .:/app
     env_file:
@@ -13,6 +13,11 @@ services:
       - FLASK_APP=app/app.py
       - FLASK_ENV=production
       - STADIA_MAPS_API_KEY=${STADIA_MAPS_API_KEY}
+      - DB_NAME=koii_validators
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
@@ -22,6 +27,7 @@ services:
       start_period: 40s
     depends_on:
       - nginx
+      - db
 
   nginx:
     build: 
@@ -37,4 +43,25 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-      start_period: 10s 
+      start_period: 10s
+
+  db:
+    image: timescale/timescaledb:latest-pg14
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_DB=koii_validators
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data: 

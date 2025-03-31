@@ -56,8 +56,8 @@
                 <div class="stat-value" id="delinquentValidators">-</div>
             </div>
             <div class="stat-card">
-                <h3>Average Skip Rate</h3>
-                <div class="stat-value" id="avgSkipRate">-</div>
+                <h3>Inflation Rate</h3>
+                <div class="stat-value" id="inflationRate">-</div>
             </div>
             <div class="stat-card">
                 <h3>Network APR</h3>
@@ -93,6 +93,7 @@
                         <th class="sortable" data-sort="commission">Commission <span class="sort-icon">↕</span></th>
                         <th class="sortable" data-sort="stake">Stake <span class="sort-icon">↕</span></th>
                         <th class="sortable" data-sort="skipRate">Skip Rate <span class="sort-icon">↕</span></th>
+                        <th class="sortable" data-sort="apr">APR <span class="sort-icon">↕</span></th>
                         <th>Version</th>
                         <th>Status</th>
                     </tr>
@@ -347,6 +348,7 @@
                                 <td>${formatPercentage(validator.commission)}</td>
                                 <td>${formatStake(validator.activatedStake)}</td>
                                 <td>${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</td>
+                                <td>${validator.apr !== undefined ? validator.apr.toFixed(2) : '-'}%</td>
                                 <td>${validator.version || '-'}</td>
                                 <td>
                                     <span class="status-badge ${validator.delinquent ? 'status-delinquent' : 'status-active'}">
@@ -392,8 +394,8 @@
                     updateElementIfChanged('totalValidators', data.totalValidators, formatNumber);
                     updateElementIfChanged('activeValidators', data.activeValidators, formatNumber);
                     updateElementIfChanged('delinquentValidators', data.delinquentValidators, formatNumber);
-                    updateElementIfChanged('avgSkipRate', data.averageSkipRate, formatPercentage);
                     updateElementIfChanged('networkApr', data.networkApr, (v) => v ? formatPercentage(v) : '-');
+                    updateElementIfChanged('inflationRate', data.inflationRate, (v) => v ? formatPercentage(v) : '-');
 
                     // Update stake info smoothly
                     updateElementIfChanged('totalActiveStake', data.totalActiveStake, formatStake);

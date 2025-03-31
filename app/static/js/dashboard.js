@@ -70,6 +70,7 @@ function updateDashboard(data) {
             <div>Delinquent Validators: ${stats.delinquentValidators}</div>
             <div>Current Active Stake: ${formatStake(stats.currentActiveStake)}</div>
             <div>Delinquent Active Stake: ${formatStake(stats.delinquentActiveStake)}</div>
+            <div>Average APR: ${stats.averageApr ? stats.averageApr.toFixed(2) : '-'}%</div>
         `;
         versionStatsContainer.appendChild(versionDiv);
     }
@@ -90,6 +91,7 @@ function updateValidatorsTable(validators) {
             <td>${formatStake(validator.activatedStake)}</td>
             <td>${validator.commission}%</td>
             <td>${validator.skipRate !== null ? formatPercentage(validator.skipRate / 100) : 'N/A'}</td>
+            <td>${validator.apr !== undefined ? validator.apr.toFixed(2) : '-'}%</td>
             <td>${validator.version || 'Unknown'}</td>
             <td><span class="status-badge ${validator.delinquent ? 'status-delinquent' : 'status-active'}">
                 ${validator.delinquent ? 'Delinquent' : 'Active'}
