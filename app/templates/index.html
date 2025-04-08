@@ -1,624 +1,618 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koii Network Validator Dashboard</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <div class="header-left">
-                <img src="{{ config.KOII_LOGO_URL }}" alt="KOII Logo" class="koii-logo">
-                <div class="header-text">
-                    <h1>Koii Validators</h1>
-                    <div class="header-subtext"><a href="{{ config.STAKECRAFT_URL }}" target="_blank" class="stakecraft-link">By StakeCraft</a></div>
+{% extends "base.html" %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <div class="header-left">
+            <img src="{{ config.KOII_LOGO_URL }}" alt="KOII Logo" class="koii-logo">
+            <div class="header-text">
+                <h1>Koii Validators</h1>
+                <div class="header-subtext"><a href="{{ config.STAKECRAFT_URL }}" target="_blank" class="stakecraft-link">By StakeCraft</a></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="epoch-progress">
+                <span class="epoch-text">Epoch: <span id="currentEpoch">-</span></span>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="epochProgress" style="width: 0%"></div>
                 </div>
+                <span class="epoch-text"><span id="epochTimeLeft">-</span></span>
             </div>
-            <div class="header-right">
-                <div class="epoch-progress">
-                    <span class="epoch-text">Epoch: <span id="currentEpoch">-</span></span>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="epochProgress" style="width: 0%"></div>
-                    </div>
-                    <span class="epoch-text"><span id="epochTimeLeft">-</span></span>
-                </div>
-                <div class="koii-price">KOII: $<span id="koiiPrice">-</span></div>
-                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
-                    🌞
-                </button>
-            </div>
-        </header>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Validators</h3>
-                <div class="stat-value" id="totalValidators">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Active Validators</h3>
-                <div class="stat-value" id="activeValidators">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Delinquent Validators</h3>
-                <div class="stat-value" id="delinquentValidators">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Inflation Rate</h3>
-                <div class="stat-value" id="inflationRate">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Network APR</h3>
-                <div class="stat-value" id="networkApr">-</div>
-            </div>
+            <div class="koii-price">KOII: $<span id="koiiPrice">-</span></div>
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                🌞
+            </button>
         </div>
+    </header>
 
-        <div class="map-card">
-            <div id="validatorMap"></div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Validators</h3>
+            <div class="stat-value" id="totalValidators">-</div>
         </div>
-
-        <div class="stake-info">
-            <div class="stake-card">
-                <h3>Total Active Stake</h3>
-                <div class="stake-value" id="totalActiveStake">-</div>
-            </div>
-            <div class="stake-card">
-                <h3>Total Current Stake</h3>
-                <div class="stake-value" id="totalCurrentStake">-</div>
-            </div>
-            <div class="stake-card">
-                <h3>Total Delinquent Stake</h3>
-                <div class="stake-value" id="totalDelinquentStake">-</div>
-            </div>
+        <div class="stat-card">
+            <h3>Active Validators</h3>
+            <div class="stat-value" id="activeValidators">-</div>
         </div>
-
-        <div class="validators-table">
-            <h2>Validator Details</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th class="sortable" data-sort="commission">Commission <span class="sort-icon">↕</span></th>
-                        <th class="sortable" data-sort="stake">Stake <span class="sort-icon">↕</span></th>
-                        <th class="sortable" data-sort="skipRate">Skip Rate <span class="sort-icon">↕</span></th>
-                        <th class="sortable" data-sort="apr">APR <span class="sort-icon">↕</span></th>
-                        <th>Version</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="validatorsTable">
-                    <!-- Validator rows will be populated here -->
-                </tbody>
-            </table>
+        <div class="stat-card">
+            <h3>Delinquent Validators</h3>
+            <div class="stat-value" id="delinquentValidators">-</div>
         </div>
-
-        <footer class="footer">
-            <div class="social-links">
-                <a href="{{ config.STAKECRAFT_TWITTER_URL }}" target="_blank" class="social-link" title="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="{{ config.STAKECRAFT_TELEGRAM_URL }}" target="_blank" class="social-link" title="Telegram"><i class="fab fa-telegram"></i></a>
-                <a href="{{ config.STAKECRAFT_DISCORD_URL }}" target="_blank" class="social-link" title="Discord"><i class="fab fa-discord"></i></a>
-                <a href="mailto:{{ config.STAKECRAFT_EMAIL }}" class="social-link" title="Email"><i class="fas fa-envelope"></i></a>
-                <a href="{{ config.STAKECRAFT_URL }}" target="_blank" class="social-link" title="Website"><i class="fas fa-globe"></i></a>
-            </div>
-            <div class="copyright">
-                © 2024 StakeCraft. All rights reserved.
-            </div>
-        </footer>
+        <div class="stat-card">
+            <h3>Inflation Rate</h3>
+            <div class="stat-value" id="inflationRate">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Network APR</h3>
+            <div class="stat-value" id="networkApr">-</div>
+        </div>
     </div>
 
-    <script>
-        function formatNumber(num) {
-            if (num === null || num === undefined) return '-';
-            return new Intl.NumberFormat('en-US').format(num);
-        }
+    <div class="map-card">
+        <div id="validatorMap"></div>
+    </div>
 
-        function formatPercentage(num) {
-            if (num === null || num === undefined) return '-';
-            return new Intl.NumberFormat('en-US', { 
-                style: 'percent',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(num / 100);
-        }
+    <div class="stake-info">
+        <div class="stake-card">
+            <h3>Total Active Stake</h3>
+            <div class="stake-value" id="totalActiveStake">-</div>
+        </div>
+        <div class="stake-card">
+            <h3>Total Current Stake</h3>
+            <div class="stake-value" id="totalCurrentStake">-</div>
+        </div>
+        <div class="stake-card">
+            <h3>Total Delinquent Stake</h3>
+            <div class="stake-value" id="totalDelinquentStake">-</div>
+        </div>
+    </div>
 
-        function formatStake(stake) {
-            if (stake === null || stake === undefined) return '-';
-            // Convert to string and remove 9 digits from the right
-            const stakeStr = stake.toString();
-            const shortenedStake = stakeStr.slice(0, -9);
-            return formatNumber(parseInt(shortenedStake)) + ' KOII';
-        }
+    <div class="validators-table">
+        <h2>Validator Details</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="sortable" data-sort="commission">Commission <span class="sort-icon">↕</span></th>
+                    <th class="sortable" data-sort="stake">Stake <span class="sort-icon">↕</span></th>
+                    <th class="sortable" data-sort="skipRate">Skip Rate <span class="sort-icon">↕</span></th>
+                    <th class="sortable" data-sort="apr">APR <span class="sort-icon">↕</span></th>
+                    <th>Version</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="validatorsTable">
+                <!-- Validator rows will be populated here -->
+            </tbody>
+        </table>
+    </div>
 
-        // Add sorting functionality
-        let currentSort = {
-            column: 'stake',
-            direction: 'desc'
-        };
+    <footer class="footer">
+        <div class="social-links">
+            <a href="{{ config.STAKECRAFT_TWITTER_URL }}" target="_blank" class="social-link" title="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="{{ config.STAKECRAFT_TELEGRAM_URL }}" target="_blank" class="social-link" title="Telegram"><i class="fab fa-telegram"></i></a>
+            <a href="{{ config.STAKECRAFT_DISCORD_URL }}" target="_blank" class="social-link" title="Discord"><i class="fab fa-discord"></i></a>
+            <a href="mailto:{{ config.STAKECRAFT_EMAIL }}" class="social-link" title="Email"><i class="fas fa-envelope"></i></a>
+            <a href="{{ config.STAKECRAFT_URL }}" target="_blank" class="social-link" title="Website"><i class="fas fa-globe"></i></a>
+        </div>
+        <div class="copyright">
+            © 2024 StakeCraft. All rights reserved.
+        </div>
+    </footer>
+</div>
+{% endblock %}
 
-        function sortValidators(validators, column, direction) {
-            return [...validators].sort((a, b) => {
-                let valueA, valueB;
-                
-                switch(column) {
-                    case 'commission':
-                        valueA = a.commission;
-                        valueB = b.commission;
-                        break;
-                    case 'stake':
-                        valueA = a.activatedStake;
-                        valueB = b.activatedStake;
-                        break;
-                    case 'skipRate':
-                        valueA = a.skipRate;
-                        valueB = b.skipRate;
-                        break;
-                }
+{% block scripts %}
+<script>
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '-';
+        return new Intl.NumberFormat('en-US').format(num);
+    }
 
-                if (valueA === null || valueA === undefined) return 1;
-                if (valueB === null || valueB === undefined) return -1;
-                
-                return direction === 'asc' ? valueA - valueB : valueB - valueA;
-            });
-        }
+    function formatPercentage(num) {
+        if (num === null || num === undefined) return '-';
+        return new Intl.NumberFormat('en-US', { 
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(num / 100);
+    }
 
-        function updateSortIcons() {
-            document.querySelectorAll('.sort-icon').forEach(icon => {
-                icon.textContent = '↕';
-            });
+    function formatStake(stake) {
+        if (stake === null || stake === undefined) return '-';
+        // Convert to string and remove 9 digits from the right
+        const stakeStr = stake.toString();
+        const shortenedStake = stakeStr.slice(0, -9);
+        return formatNumber(parseInt(shortenedStake)) + ' KOII';
+    }
+
+    // Add sorting functionality
+    let currentSort = {
+        column: 'stake',
+        direction: 'desc'
+    };
+
+    function sortValidators(validators, column, direction) {
+        return [...validators].sort((a, b) => {
+            let valueA, valueB;
             
-            if (currentSort.column) {
-                const header = document.querySelector(`th[data-sort="${currentSort.column}"]`);
-                if (header) {
-                    header.querySelector('.sort-icon').textContent = currentSort.direction === 'asc' ? '↑' : '↓';
-                }
+            switch(column) {
+                case 'commission':
+                    valueA = a.commission;
+                    valueB = b.commission;
+                    break;
+                case 'stake':
+                    valueA = a.activatedStake;
+                    valueB = b.activatedStake;
+                    break;
+                case 'skipRate':
+                    valueA = a.skipRate;
+                    valueB = b.skipRate;
+                    break;
+            }
+
+            if (valueA === null || valueA === undefined) return 1;
+            if (valueB === null || valueB === undefined) return -1;
+            
+            return direction === 'asc' ? valueA - valueB : valueB - valueA;
+        });
+    }
+
+    function updateSortIcons() {
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+            icon.textContent = '↕';
+        });
+        
+        if (currentSort.column) {
+            const header = document.querySelector(`th[data-sort="${currentSort.column}"]`);
+            if (header) {
+                header.querySelector('.sort-icon').textContent = currentSort.direction === 'asc' ? '↑' : '↓';
             }
         }
+    }
 
-        // Add click handlers for sortable columns
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.sortable')) {
-                const header = e.target.closest('.sortable');
-                const column = header.dataset.sort;
-                
-                if (currentSort.column === column) {
-                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                } else {
-                    currentSort.column = column;
-                    currentSort.direction = 'asc';
-                }
-                
-                updateSortIcons();
-                updateDashboard();
+    // Add click handlers for sortable columns
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.sortable')) {
+            const header = e.target.closest('.sortable');
+            const column = header.dataset.sort;
+            
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
             }
-        });
+            
+            updateSortIcons();
+            updateDashboard();
+        }
+    });
 
-        function updateDashboard() {
-            // First fetch the main API data
-            fetch('{{ config.API_ENDPOINT }}')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received data:', data);
+    function updateDashboard() {
+        // First fetch the main API data
+        fetch('{{ config.API_ENDPOINT }}')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                
+                // Update epoch progress if available
+                if (data.epochInfo) {
+                    console.log('Epoch info:', data.epochInfo);
+                    const { currentEpoch, epochProgress } = data.epochInfo;
                     
-                    // Update epoch progress if available
-                    if (data.epochInfo) {
-                        console.log('Epoch info:', data.epochInfo);
-                        const { currentEpoch, epochProgress } = data.epochInfo;
-                        
-                        // Update epoch number
-                        const epochElement = document.getElementById('currentEpoch');
-                        if (currentEpoch !== undefined) {
-                            epochElement.textContent = currentEpoch;
-                            console.log('Updated epoch number:', currentEpoch);
-                        }
-                        
-                        // Update progress bar
-                        const progressBar = document.getElementById('epochProgress');
-                        if (epochProgress !== undefined) {
-                            const progress = Math.min(Math.max(epochProgress, 0), 100); // Ensure between 0-100
-                            console.log('Setting progress bar width to:', `${progress}%`);
-                            progressBar.style.width = `${progress}%`;
-                            // Force a reflow to ensure the style is applied
-                            progressBar.offsetHeight;
-                        }
-                        
-                        // Update progress percentage
-                        const timeLeftElement = document.getElementById('epochTimeLeft');
-                        if (epochProgress !== undefined) {
-                            const progress = Math.min(Math.max(epochProgress, 0), 100);
-                            timeLeftElement.textContent = `${progress.toFixed(1)}%`;
-                            console.log('Updated progress percentage:', `${progress.toFixed(1)}%`);
-                        }
-                    } else {
-                        console.log('No epoch info in data:', data);
+                    // Update epoch number
+                    const epochElement = document.getElementById('currentEpoch');
+                    if (currentEpoch !== undefined) {
+                        epochElement.textContent = currentEpoch;
+                        console.log('Updated epoch number:', currentEpoch);
                     }
+                    
+                    // Update progress bar
+                    const progressBar = document.getElementById('epochProgress');
+                    if (epochProgress !== undefined) {
+                        const progress = Math.min(Math.max(epochProgress, 0), 100); // Ensure between 0-100
+                        console.log('Setting progress bar width to:', `${progress}%`);
+                        progressBar.style.width = `${progress}%`;
+                        // Force a reflow to ensure the style is applied
+                        progressBar.offsetHeight;
+                    }
+                    
+                    // Update progress percentage
+                    const timeLeftElement = document.getElementById('epochTimeLeft');
+                    if (epochProgress !== undefined) {
+                        const progress = Math.min(Math.max(epochProgress, 0), 100);
+                        timeLeftElement.textContent = `${progress.toFixed(1)}%`;
+                        console.log('Updated progress percentage:', `${progress.toFixed(1)}%`);
+                    }
+                } else {
+                    console.log('No epoch info in data:', data);
+                }
 
-                    // Try to fetch validator info, but don't let it break the main functionality
-                    fetch('http://localhost:8080/api/validators', {
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
+                // Try to fetch validator info, but don't let it break the main functionality
+                fetch('http://localhost:8080/api/validators', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
+                    .then(validatorInfo => {
+                        // Create a map of validator info by identity pubkey
+                        const validatorMap = {};
+                        validatorInfo.forEach(validator => {
+                            if (validator.identityPubkey) {
+                                validatorMap[validator.identityPubkey] = validator;
+                            }
+                        });
+                        
+                        // Store the validator map globally
+                        window.validatorInfoMap = validatorMap;
+                        
+                        // Update the table with the new data
+                        if (data.validators) {
+                            updateValidatorTable(data.validators);
                         }
                     })
-                        .then(res => {
-                            if (!res.ok) {
-                                throw new Error(`HTTP error! status: ${res.status}`);
-                            }
-                            return res.json();
-                        })
-                        .then(validatorInfo => {
-                            // Create a map of validator info by identity pubkey
-                            const validatorMap = {};
-                            validatorInfo.forEach(validator => {
-                                if (validator.identityPubkey) {
-                                    validatorMap[validator.identityPubkey] = validator;
-                                }
-                            });
-                            
-                            // Store the validator map globally
-                            window.validatorInfoMap = validatorMap;
-                            
-                            // Update the table with the new data
-                            if (data.validators) {
-                                updateValidatorTable(data.validators);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching validator info:', error);
-                            // Still update the table with default values
-                            if (data.validators) {
-                                updateValidatorTable(data.validators);
-                            }
-                        });
-                    
-                    // Helper function to update element only if value changed
-                    function updateElementIfChanged(elementId, newValue, formatter = (v) => v) {
-                        const element = document.getElementById(elementId);
-                        if (!element) return;
-                        const formattedValue = formatter(newValue);
-                        if (element.textContent !== formattedValue) {
-                            element.textContent = formattedValue;
+                    .catch(error => {
+                        console.error('Error fetching validator info:', error);
+                        // Still update the table with default values
+                        if (data.validators) {
+                            updateValidatorTable(data.validators);
                         }
+                    });
+                
+                // Helper function to update element only if value changed
+                function updateElementIfChanged(elementId, newValue, formatter = (v) => v) {
+                    const element = document.getElementById(elementId);
+                    if (!element) return;
+                    const formattedValue = formatter(newValue);
+                    if (element.textContent !== formattedValue) {
+                        element.textContent = formattedValue;
                     }
+                }
+                
+                function updateValidatorTable(validators) {
+                    const validatorsTable = document.getElementById('validatorsTable');
+                    if (!validators) return;
+
+                    // Store currently expanded cells before update
+                    const expandedIdentities = new Set();
+                    validatorsTable.querySelectorAll('.validator-cell.expanded').forEach(cell => {
+                        const identity = cell.querySelector('.copy-value')?.getAttribute('data-value');
+                        if (identity) expandedIdentities.add(identity);
+                    });
+
+                    const newTable = document.createElement('tbody');
+                    newTable.id = 'validatorsTable';
                     
-                    function updateValidatorTable(validators) {
-                        const validatorsTable = document.getElementById('validatorsTable');
-                        if (!validators) return;
-
-                        // Store currently expanded cells before update
-                        const expandedIdentities = new Set();
-                        validatorsTable.querySelectorAll('.validator-cell.expanded').forEach(cell => {
-                            const identity = cell.querySelector('.copy-value')?.getAttribute('data-value');
-                            if (identity) expandedIdentities.add(identity);
-                        });
-
-                        const newTable = document.createElement('tbody');
-                        newTable.id = 'validatorsTable';
+                    validators.forEach(validator => {
+                        const row = document.createElement('tr');
+                        row.className = 'validator-row';
+                        const shortIdentity = validator.identityPubkey.slice(0, 8) + '...';
+                        const isExpanded = expandedIdentities.has(validator.identityPubkey);
+                        const validatorInfo = window.validatorInfoMap?.[validator.identityPubkey];
+                        console.log('Validator info for', validator.identityPubkey, ':', validatorInfo);
+                        // Get name from info.name, fallback to short identity if not available
+                        const validatorName = validatorInfo?.info?.name || shortIdentity;
                         
-                        validators.forEach(validator => {
-                            const row = document.createElement('tr');
-                            row.className = 'validator-row';
-                            const shortIdentity = validator.identityPubkey.slice(0, 8) + '...';
-                            const isExpanded = expandedIdentities.has(validator.identityPubkey);
-                            const validatorInfo = window.validatorInfoMap?.[validator.identityPubkey];
-                            console.log('Validator info for', validator.identityPubkey, ':', validatorInfo);
-                            // Get name from info.name, fallback to short identity if not available
-                            const validatorName = validatorInfo?.info?.name || shortIdentity;
-                            
-                            row.innerHTML = `
-                                <td>
-                                    <div class="validator-cell ${isExpanded ? 'expanded' : ''}">
-                                        <div class="validator-header">
-                                            <span class="validator-name">${validator.delinquent ? '⚠️ ' : ''}${validatorName}</span>
-                                        </div>
-                                        <div class="validator-details">
-                                            <div class="copyable-field">
-                                                <strong>Identity:</strong>
-                                                <span class="copy-value" data-value="${validator.identityPubkey}">${validator.identityPubkey}</span>
-                                            </div>
-                                            <div class="copyable-field">
-                                                <strong>Vote Account:</strong>
-                                                <span class="copy-value" data-value="${validator.voteAccountPubkey}">${validator.voteAccountPubkey}</span>
-                                            </div>
-                                            ${validatorInfo?.info?.website ? `
-                                            <div class="copyable-field">
-                                                <strong>Website:</strong>
-                                                <a href="${validatorInfo.info.website}" target="_blank">${validatorInfo.info.website}</a>
-                                            </div>
-                                            ` : ''}
-                                        </div>
+                        row.innerHTML = `
+                            <td>
+                                <div class="validator-cell ${isExpanded ? 'expanded' : ''}">
+                                    <div class="validator-header">
+                                        <span class="validator-name">${validator.delinquent ? '⚠️ ' : ''}${validatorName}</span>
                                     </div>
-                                </td>
-                                <td>${formatPercentage(validator.commission)}</td>
-                                <td>${formatStake(validator.activatedStake)}</td>
-                                <td>${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</td>
-                                <td>${validator.apr !== undefined ? validator.apr.toFixed(2) : '-'}%</td>
-                                <td>${validator.version || '-'}</td>
-                                <td>
-                                    <span class="status-badge ${validator.delinquent ? 'status-delinquent' : 'status-active'}">
-                                        ${validator.delinquent ? 'Delinquent' : 'Active'}
-                                    </span>
-                                </td>
-                            `;
-                            newTable.appendChild(row);
-                        });
+                                    <div class="validator-details">
+                                        <div class="copyable-field">
+                                            <strong>Identity:</strong>
+                                            <span class="copy-value" data-value="${validator.identityPubkey}">${validator.identityPubkey}</span>
+                                        </div>
+                                        <div class="copyable-field">
+                                            <strong>Vote Account:</strong>
+                                            <span class="copy-value" data-value="${validator.voteAccountPubkey}">${validator.voteAccountPubkey}</span>
+                                        </div>
+                                        ${validatorInfo?.info?.website ? `
+                                        <div class="copyable-field">
+                                            <strong>Website:</strong>
+                                            <a href="${validatorInfo.info.website}" target="_blank">${validatorInfo.info.website}</a>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${formatPercentage(validator.commission)}</td>
+                            <td>${formatStake(validator.activatedStake)}</td>
+                            <td>${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</td>
+                            <td>${validator.apr !== undefined ? validator.apr.toFixed(2) : '-'}%</td>
+                            <td>${validator.version || '-'}</td>
+                            <td>
+                                <span class="status-badge ${validator.delinquent ? 'status-delinquent' : 'status-active'}">
+                                    ${validator.delinquent ? 'Delinquent' : 'Active'}
+                                </span>
+                            </td>
+                        `;
+                        newTable.appendChild(row);
+                    });
 
-                        // Compare table content excluding expanded states
-                        const cleanOldContent = validatorsTable.innerHTML.replace(/\s*expanded\s*/g, '');
-                        const cleanNewContent = newTable.innerHTML.replace(/\s*expanded\s*/g, '');
+                    // Compare table content excluding expanded states
+                    const cleanOldContent = validatorsTable.innerHTML.replace(/\s*expanded\s*/g, '');
+                    const cleanNewContent = newTable.innerHTML.replace(/\s*expanded\s*/g, '');
 
-                        // Only update if actual content changed
-                        if (cleanOldContent !== cleanNewContent) {
-                            validatorsTable.innerHTML = newTable.innerHTML;
-                            
-                            // Reattach click handlers for expandable details
-                            validatorsTable.querySelectorAll('.validator-cell').forEach(cell => {
-                                cell.addEventListener('click', function(e) {
-                                    // Don't expand if clicking on a link or copy button
-                                    if (e.target.tagName === 'A' || e.target.classList.contains('copy-value')) {
-                                        return;
-                                    }
-                                    this.classList.toggle('expanded');
-                                });
+                    // Only update if actual content changed
+                    if (cleanOldContent !== cleanNewContent) {
+                        validatorsTable.innerHTML = newTable.innerHTML;
+                        
+                        // Reattach click handlers for expandable details
+                        validatorsTable.querySelectorAll('.validator-cell').forEach(cell => {
+                            cell.addEventListener('click', function(e) {
+                                // Don't expand if clicking on a link or copy button
+                                if (e.target.tagName === 'A' || e.target.classList.contains('copy-value')) {
+                                    return;
+                                }
+                                this.classList.toggle('expanded');
                             });
-                        }
+                        });
                     }
+                }
 
-                    // Initial update with current data
-                    updateValidatorTable(data.validators);
+                // Initial update with current data
+                updateValidatorTable(data.validators);
 
-                    // Update KOII price smoothly
-                    if (data.koiiPrice !== null) {
-                        const price = data.koiiPrice;
-                        const decimals = price < 0.01 ? 6 : price < 1 ? 4 : 2;
-                        updateElementIfChanged('koiiPrice', price, (v) => v.toFixed(decimals));
+                // Update KOII price smoothly
+                if (data.koiiPrice !== null) {
+                    const price = data.koiiPrice;
+                    const decimals = price < 0.01 ? 6 : price < 1 ? 4 : 2;
+                    updateElementIfChanged('koiiPrice', price, (v) => v.toFixed(decimals));
+                }
+
+                // Update summary stats smoothly
+                updateElementIfChanged('totalValidators', data.totalValidators, formatNumber);
+                updateElementIfChanged('activeValidators', data.activeValidators, formatNumber);
+                updateElementIfChanged('delinquentValidators', data.delinquentValidators, formatNumber);
+                updateElementIfChanged('networkApr', data.networkApr, (v) => v ? formatPercentage(v) : '-');
+                updateElementIfChanged('inflationRate', data.inflationRate, (v) => v ? formatPercentage(v) : '-');
+
+                // Update stake info smoothly
+                updateElementIfChanged('totalActiveStake', data.totalActiveStake, formatStake);
+                updateElementIfChanged('totalCurrentStake', data.totalCurrentStake, formatStake);
+                updateElementIfChanged('totalDelinquentStake', data.totalDelinquentStake, formatStake);
+
+                // Sort validators if needed
+                if (currentSort.column && data.validators) {
+                    data.validators = sortValidators(data.validators, currentSort.column, currentSort.direction);
+                }
+
+                // Update map only if validator locations changed
+                if (data.validators) {
+                    const locationString = JSON.stringify(data.validators.map(v => 
+                        v.location ? `${v.location.latitude},${v.location.longitude}` : null
+                    ));
+                    if (window.lastLocationString !== locationString) {
+                        updateMap(data.validators);
+                        window.lastLocationString = locationString;
                     }
-
-                    // Update summary stats smoothly
-                    updateElementIfChanged('totalValidators', data.totalValidators, formatNumber);
-                    updateElementIfChanged('activeValidators', data.activeValidators, formatNumber);
-                    updateElementIfChanged('delinquentValidators', data.delinquentValidators, formatNumber);
-                    updateElementIfChanged('networkApr', data.networkApr, (v) => v ? formatPercentage(v) : '-');
-                    updateElementIfChanged('inflationRate', data.inflationRate, (v) => v ? formatPercentage(v) : '-');
-
-                    // Update stake info smoothly
-                    updateElementIfChanged('totalActiveStake', data.totalActiveStake, formatStake);
-                    updateElementIfChanged('totalCurrentStake', data.totalCurrentStake, formatStake);
-                    updateElementIfChanged('totalDelinquentStake', data.totalDelinquentStake, formatStake);
-
-                    // Sort validators if needed
-                    if (currentSort.column && data.validators) {
-                        data.validators = sortValidators(data.validators, currentSort.column, currentSort.direction);
-                    }
-
-                    // Update map only if validator locations changed
-                    if (data.validators) {
-                        const locationString = JSON.stringify(data.validators.map(v => 
-                            v.location ? `${v.location.latitude},${v.location.longitude}` : null
-                        ));
-                        if (window.lastLocationString !== locationString) {
-                            updateMap(data.validators);
-                            window.lastLocationString = locationString;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    // Show error message only if not already shown
-                    const existingError = document.querySelector('.error-message');
-                    if (!existingError) {
-                        const errorMessage = document.createElement('div');
-                        errorMessage.className = 'error-message';
-                        errorMessage.textContent = `Error loading data: ${error.message}`;
-                        document.querySelector('.container').prepend(errorMessage);
-                    }
-                });
-        }
-
-        // Add refresh interval configuration
-        const REFRESH_INTERVAL = {{ config.REFRESH_INTERVAL }}; // From configuration
-        let refreshTimer = null;
-
-        function startAutoRefresh() {
-            if (!refreshTimer) {
-                refreshTimer = setInterval(updateDashboard, REFRESH_INTERVAL);
-            }
-        }
-
-        function stopAutoRefresh() {
-            if (refreshTimer) {
-                clearInterval(refreshTimer);
-                refreshTimer = null;
-            }
-        }
-
-        // Start auto-refresh when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            updateDashboard(); // Initial update
-            startAutoRefresh(); // Start periodic updates
-        });
-
-        // Add visibility change handling
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                stopAutoRefresh();
-            } else {
-                startAutoRefresh();
-            }
-        });
-
-        // Initialize map
-        const map = L.map('validatorMap').setView([20, 0], 2);
-        
-        // Create both light and dark tile layers
-        const lightTiles = L.tileLayer('{{ config.MAP_LIGHT_TILES_URL }}', {
-            attribution: '© OpenStreetMap contributors'
-        });
-
-        const darkTiles = L.tileLayer('{{ config.MAP_DARK_TILES_URL }}', {
-            attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-        });
-
-        // Set initial theme based on current theme
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        if (currentTheme === 'dark') {
-            darkTiles.addTo(map);
-        } else {
-            lightTiles.addTo(map);
-        }
-
-        // Update map theme when theme changes
-        function updateMapTheme(theme) {
-            if (theme === 'dark') {
-                map.removeLayer(lightTiles);
-                darkTiles.addTo(map);
-            } else {
-                map.removeLayer(darkTiles);
-                lightTiles.addTo(map);
-            }
-        }
-
-        // Modify the setTheme function to also update map
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            themeToggle.textContent = theme === 'dark' ? '🌙' : '🌞';
-            localStorage.setItem('theme', theme);
-            updateMapTheme(theme);
-        }
-
-        // Initialize marker cluster group
-        let markerClusterGroup = L.markerClusterGroup({
-            maxClusterRadius: 50,
-            spiderfyOnMaxZoom: true,
-            showCoverageOnHover: false,
-            zoomToBoundsOnClick: true
-        });
-        map.addLayer(markerClusterGroup);
-
-        let markers = [];
-
-        function createCustomIcon(delinquent) {
-            return L.divIcon({
-                className: `validator-marker ${delinquent ? 'delinquent' : 'active'}`,
-                html: `<div class="marker-icon ${delinquent ? 'delinquent' : 'active'}"></div>`,
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-            });
-        }
-
-        function formatStakeCompact(stake) {
-            if (!stake) return '0 KOII';
-            const stakeStr = stake.toString();
-            const shortenedStake = parseInt(stakeStr.slice(0, -9));
-            if (shortenedStake >= 1000000) {
-                return `${(shortenedStake / 1000000).toFixed(1)}M KOII`;
-            } else if (shortenedStake >= 1000) {
-                return `${(shortenedStake / 1000).toFixed(1)}K KOII`;
-            }
-            return `${shortenedStake} KOII`;
-        }
-
-        function updateMap(validators) {
-            // Clear existing markers
-            markers.forEach(marker => markerClusterGroup.removeLayer(marker));
-            markers = [];
-            markerClusterGroup.clearLayers();
-
-            // Add new markers
-            validators.forEach(validator => {
-                if (validator.location && validator.location.latitude && validator.location.longitude) {
-                    const marker = L.marker(
-                        [validator.location.latitude, validator.location.longitude],
-                        { icon: createCustomIcon(validator.delinquent) }
-                    ).bindPopup(`
-                        <div class="map-popup">
-                            <p><strong>Identity:</strong> ${validator.identityPubkey.slice(0, 8)}...</p>
-                            <p><strong>Status:</strong> <span class="status-${validator.delinquent ? 'delinquent' : 'active'}">${validator.delinquent ? 'Delinquent' : 'Active'}</span></p>
-                            <p><strong>Location:</strong> ${validator.location.city || ''}, ${validator.location.country || ''}</p>
-                            <p><strong>Stake:</strong> ${formatStakeCompact(validator.activatedStake)}</p>
-                            <p><strong>Commission:</strong> ${validator.commission}%</p>
-                            <p><strong>Skip Rate:</strong> ${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</p>
-                            <p><strong>Version:</strong> ${validator.version || '-'}</p>
-                        </div>
-                    `);
-                    markers.push(marker);
-                    markerClusterGroup.addLayer(marker);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                // Show error message only if not already shown
+                const existingError = document.querySelector('.error-message');
+                if (!existingError) {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.textContent = `Error loading data: ${error.message}`;
+                    document.querySelector('.container').prepend(errorMessage);
                 }
             });
+    }
 
-            // Fit map bounds if there are markers
-            if (markers.length > 0) {
-                map.fitBounds(markerClusterGroup.getBounds(), { padding: [50, 50] });
-            }
+    // Add refresh interval configuration 
+    const REFRESH_INTERVAL = {{ config.REFRESH_INTERVAL }}; // From configuration
+    let refreshTimer = null;
+
+    function startAutoRefresh() {
+        if (!refreshTimer) {
+            refreshTimer = setInterval(updateDashboard, REFRESH_INTERVAL);
         }
+    }
 
-        // Update copy functionality
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('copy-value')) {
-                const value = e.target.getAttribute('data-value');
-                const originalText = e.target.textContent;
-                
-                // Copy to clipboard
-                navigator.clipboard.writeText(value).then(() => {
-                    // Show success feedback
-                    e.target.classList.add('copied');
-                    e.target.textContent = 'Copied!';
-                    
-                    // Reset after 2 seconds
-                    setTimeout(() => {
-                        e.target.textContent = originalText;
-                        e.target.classList.remove('copied');
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy text: ', err);
-                    e.target.textContent = 'Failed to copy';
-                    setTimeout(() => {
-                        e.target.textContent = originalText;
-                    }, 2000);
-                });
-            }
-        });
+    function stopAutoRefresh() {
+        if (refreshTimer) {
+            clearInterval(refreshTimer);
+            refreshTimer = null;
+        }
+    }
 
-        // Add theme switching functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-        
-        // Initialize theme
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
+    // Start auto-refresh when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        updateDashboard(); // Initial update
+        startAutoRefresh(); // Start periodic updates
+    });
+
+    // Add visibility change handling
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAutoRefresh();
         } else {
-            setTheme(prefersDarkScheme.matches ? 'dark' : 'light');
+            startAutoRefresh();
         }
-        
-        // Theme toggle click handler
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    // Initialize map
+    const map = L.map('validatorMap').setView([20, 0], 2);
+    
+    // Create both light and dark tile layers
+    const lightTiles = L.tileLayer('{{ config.MAP_LIGHT_TILES_URL }}', {
+        attribution: '© OpenStreetMap contributors'
+    });
+
+    const darkTiles = L.tileLayer('{{ config.MAP_DARK_TILES_URL }}', {
+        attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+    });
+
+    // Set initial theme based on current theme
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    if (currentTheme === 'dark') {
+        darkTiles.addTo(map);
+    } else {
+        lightTiles.addTo(map);
+    }
+
+    // Update map theme when theme changes
+    function updateMapTheme(theme) {
+        if (theme === 'dark') {
+            map.removeLayer(lightTiles);
+            darkTiles.addTo(map);
+        } else {
+            map.removeLayer(darkTiles);
+            lightTiles.addTo(map);
+        }
+    }
+
+    // Modify the setTheme function to also update map
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        themeToggle.textContent = theme === 'dark' ? '🌙' : '🌞';
+        localStorage.setItem('theme', theme);
+        updateMapTheme(theme);
+    }
+
+    // Initialize marker cluster group
+    let markerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true
+    });
+    map.addLayer(markerClusterGroup);
+
+    let markers = [];
+
+    function createCustomIcon(delinquent) {
+        return L.divIcon({
+            className: `validator-marker ${delinquent ? 'delinquent' : 'active'}`,
+            html: `<div class="marker-icon ${delinquent ? 'delinquent' : 'active'}"></div>`,
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
         });
-        
-        // Listen for system theme changes
-        prefersDarkScheme.addEventListener('change', (e) => {
-            if (!localStorage.getItem('theme')) {
-                setTheme(e.matches ? 'dark' : 'light');
+    }
+
+    function formatStakeCompact(stake) {
+        if (!stake) return '0 KOII';
+        const stakeStr = stake.toString();
+        const shortenedStake = parseInt(stakeStr.slice(0, -9));
+        if (shortenedStake >= 1000000) {
+            return `${(shortenedStake / 1000000).toFixed(1)}M KOII`;
+        } else if (shortenedStake >= 1000) {
+            return `${(shortenedStake / 1000).toFixed(1)}K KOII`;
+        }
+        return `${shortenedStake} KOII`;
+    }
+
+    function updateMap(validators) {
+        // Clear existing markers
+        markers.forEach(marker => markerClusterGroup.removeLayer(marker));
+        markers = [];
+        markerClusterGroup.clearLayers();
+
+        // Add new markers
+        validators.forEach(validator => {
+            if (validator.location && validator.location.latitude && validator.location.longitude) {
+                const marker = L.marker(
+                    [validator.location.latitude, validator.location.longitude],
+                    { icon: createCustomIcon(validator.delinquent) }
+                ).bindPopup(`
+                    <div class="map-popup">
+                        <p><strong>Identity:</strong> ${validator.identityPubkey.slice(0, 8)}...</p>
+                        <p><strong>Status:</strong> <span class="status-${validator.delinquent ? 'delinquent' : 'active'}">${validator.delinquent ? 'Delinquent' : 'Active'}</span></p>
+                        <p><strong>Location:</strong> ${validator.location.city || ''}, ${validator.location.country || ''}</p>
+                        <p><strong>Stake:</strong> ${formatStakeCompact(validator.activatedStake)}</p>
+                        <p><strong>Commission:</strong> ${validator.commission}%</p>
+                        <p><strong>Skip Rate:</strong> ${validator.skipRate !== undefined ? validator.skipRate.toFixed(2) : '-'}%</p>
+                        <p><strong>Version:</strong> ${validator.version || '-'}</p>
+                    </div>
+                `);
+                markers.push(marker);
+                markerClusterGroup.addLayer(marker);
             }
         });
-    </script>
-</body>
-</html> 
+
+        // Fit map bounds if there are markers
+        if (markers.length > 0) {
+            map.fitBounds(markerClusterGroup.getBounds(), { padding: [50, 50] });
+        }
+    }
+
+    // Update copy functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('copy-value')) {
+            const value = e.target.getAttribute('data-value');
+            const originalText = e.target.textContent;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(value).then(() => {
+                // Show success feedback
+                e.target.classList.add('copied');
+                e.target.textContent = 'Copied!';
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    e.target.textContent = originalText;
+                    e.target.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                e.target.textContent = 'Failed to copy';
+                setTimeout(() => {
+                    e.target.textContent = originalText;
+                }, 2000);
+            });
+        }
+    });
+
+    // Add theme switching functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        setTheme(savedTheme);
+    } else {
+        setTheme(prefersDarkScheme.matches ? 'dark' : 'light');
+    }
+    
+    // Theme toggle click handler
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+    
+    // Listen for system theme changes
+    prefersDarkScheme.addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+</script>
+{% endblock %} 

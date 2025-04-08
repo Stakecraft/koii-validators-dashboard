@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import requests
 import json
 from datetime import datetime
@@ -917,6 +917,164 @@ def health_check():
             'ttl': CACHE_TTL
         }
     })
+
+@app.route('/staking')
+def staking():
+    """Render the staking page"""
+    try:
+        # Get validator data for the staking form
+        validators = get_validator_info()
+        if not validators:
+            return render_template('staking.html', validators=[])
+        
+        # Process validators for the staking form
+        processed_validators = []
+        for validator in validators.get('validators', []):
+            processed_validators.append({
+                'identity_pubkey': validator.get('identity_pubkey', ''),
+                'vote_pubkey': validator.get('vote_pubkey', ''),
+                'commission': validator.get('commission', 0),
+                'stake': validator.get('stake', 0),
+                'apr': validator.get('apr', 0)
+            })
+        
+        return render_template('staking.html', validators=processed_validators)
+    except Exception as e:
+        logger.error(f"Error rendering staking page: {e}")
+        return render_template('staking.html', validators=[])
+
+@app.route('/api/stake', methods=['POST'])
+def stake():
+    """Handle stake transaction"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        validator_pubkey = data.get('validator_pubkey')
+        amount = data.get('amount')
+        
+        if not validator_pubkey or not amount:
+            return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
+        
+        # Create stake transaction
+        transaction = create_stake_transaction(validator_pubkey, amount)
+        
+        return jsonify({
+            'success': True,
+            'transaction': transaction
+        })
+    except Exception as e:
+        logger.error(f"Error creating stake transaction: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/unstake', methods=['POST'])
+def unstake():
+    """Handle unstake transaction"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        validator_pubkey = data.get('validator_pubkey')
+        
+        if not validator_pubkey:
+            return jsonify({'success': False, 'error': 'Missing validator pubkey'}), 400
+        
+        # Create unstake transaction
+        transaction = create_unstake_transaction(validator_pubkey)
+        
+        return jsonify({
+            'success': True,
+            'transaction': transaction
+        })
+    except Exception as e:
+        logger.error(f"Error creating unstake transaction: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/send-transaction', methods=['POST'])
+def send_transaction():
+    """Send a signed transaction to the network"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        signed_transaction = data.get('signed_transaction')
+        
+        if not signed_transaction:
+            return jsonify({'success': False, 'error': 'Missing signed transaction'}), 400
+        
+        # Send transaction to the network
+        result = send_transaction_to_network(signed_transaction)
+        
+        return jsonify({
+            'success': True,
+            'result': result
+        })
+    except Exception as e:
+        logger.error(f"Error sending transaction: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def create_stake_transaction(validator_pubkey: str, amount: float) -> dict:
+    """Create a stake transaction"""
+    try:
+        # Convert amount to lamports
+        lamports = int(amount * 1e9)  # 1 KOII = 1e9 lamports
+        
+        # Create stake transaction
+        transaction = {
+            'type': 'stake',
+            'validator_pubkey': validator_pubkey,
+            'amount': lamports,
+            'timestamp': int(time.time())
+        }
+        
+        return transaction
+    except Exception as e:
+        logger.error(f"Error creating stake transaction: {e}")
+        raise
+
+def create_unstake_transaction(validator_pubkey: str) -> dict:
+    """Create an unstake transaction"""
+    try:
+        # Create unstake transaction
+        transaction = {
+            'type': 'unstake',
+            'validator_pubkey': validator_pubkey,
+            'timestamp': int(time.time())
+        }
+        
+        return transaction
+    except Exception as e:
+        logger.error(f"Error creating unstake transaction: {e}")
+        raise
+
+def send_transaction_to_network(signed_transaction: dict) -> dict:
+    """Send a signed transaction to the network"""
+    try:
+        # Make RPC call to send transaction
+        response = requests.post(
+            os.getenv('KOII_RPC_URL'),
+            json={
+                'jsonrpc': '2.0',
+                'id': 1,
+                'method': 'sendTransaction',
+                'params': [signed_transaction]
+            }
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"RPC request failed: {response.text}")
+        
+        result = response.json()
+        if 'error' in result:
+            raise Exception(f"RPC error: {result['error']}")
+        
+        return result['result']
+    except Exception as e:
+        logger.error(f"Error sending transaction to network: {e}")
+        raise
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True) 
