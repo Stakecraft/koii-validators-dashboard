@@ -17,6 +17,15 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SGSX5472MM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-SGSX5472MM');
+</script>
 <body>
     <div class="container">
         <header>
@@ -250,7 +259,7 @@
                     }
 
                     // Try to fetch validator info, but don't let it break the main functionality
-                    fetch('http://localhost:8080/api/validators', {
+                    fetch('{{ config.VALIDATORS_API_URL }}', {
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json'

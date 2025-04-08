@@ -19,6 +19,9 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
     restart: unless-stopped
+    networks:
+      koii:
+        ipv4_address: 192.168.248.2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
       interval: 30s
@@ -40,6 +43,9 @@ services:
     volumes:
       - ./nginx/data:/usr/share/nginx/html
     restart: unless-stopped
+    networks:
+      koii:
+        ipv4_address: 192.168.248.3
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/health"]
       interval: 30s
@@ -50,7 +56,7 @@ services:
   db:
     image: timescale/timescaledb:latest-pg14
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_DB=koii_validators
       - POSTGRES_USER=postgres
@@ -58,6 +64,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      koii:
+        ipv4_address: 192.168.248.4
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -67,3 +76,6 @@ services:
 
 volumes:
   postgres_data: 
+networks:
+  koii:
+    external: true
